@@ -271,14 +271,20 @@ def svg_for_key(key_id, isFilled):
 
 	return result
 
-def main():
+def write_svg_for_named_keys(filename, keys, isFilled):
 
 	contents = ''
+	for key in sorted(keys):
+		contents += svg_for_key(key, isFilled)
 
-	for key_id in KEYS.keys():
-		contents += svg_for_key(key_id, False)
+	write_svg(filename, contents)
 
-	write_svg('test.svg', contents)
+def main():
+
+	write_svg_for_named_keys('board.svg', KEYS.keys(), isFilled=False)
+
+	for key in sorted(KEYS.keys()):
+		write_svg_for_named_keys(key+'.svg', [key], isFilled=True)
 
 if __name__=='__main__':
 	main()
