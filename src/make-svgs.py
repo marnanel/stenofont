@@ -1,3 +1,5 @@
+import fontforge
+
 PARAMS = {
 	'keyWidth': 70,
 	'tallHeight': 200,
@@ -6,6 +8,7 @@ PARAMS = {
 	'verticalSpacing': 10,
 	'borderHeight': 10,
 	'borderWidth': 10,
+	'fontName': 'Stenoboard',
 }
 
 TOP_ROW = 1
@@ -236,6 +239,9 @@ def svg_for_key(key_id, isFilled):
 	x = xMultiplier * (details['x']-1)
 	x += PARAMS['horizontalSpacing']/2
 
+	if isFilled:
+		x -= PARAMS['boardWidth']
+
 	if details['tall']:
 		keyHeight = PARAMS['tallHeight']
 	else:
@@ -279,12 +285,62 @@ def write_svg_for_named_keys(filename, keys, isFilled):
 
 	write_svg(filename, contents)
 
+
+
+FONTNAME = 'Stenoboard'
+
+def makeFont():
+
+	boardWidth = (PARAMS['keyWidth']+PARAMS['horizontalSpacing'])*10
+	boardHeight = PARAMS['tallHeight']*1.8
+
+	font = fontforge.font()
+	font.fontname = FONTNAME
+	font.fullname = FONTNAME
+	font.familyname = FONTNAME
+	font.ascent = boardHeight
+	font.descent = 0
+
+	def storeGlyph(char, svgFilename, width=0):
+		glyph = font.createChar(ord(char))
+		glyph.width = width
+		glyph.importOutlines(svgFilename)
+
+	storeGlyph('/', 'board.svg', boardWidth)
+
+	for key in KEYS.keys():
+
+		svgFilename = key+'.svg'
+
+		if key=='star':
+			storeGlyph('*', svgFilename)
+		elif '2' in key:
+			# this is a key that exists on the left
+			# and the right, and this one is on the right.
+			# So we store it as a lowercase letter
+			storeGlyph(key[0].lower(), svgFilename)
+		elif (key+'2') in KEYS:
+			# this is a key that exists on the left
+			# and the right, and this one is on the left
+			# So we store it as an uppercase letter
+			storeGlyph(key.upper(), svgFilename)
+		else:
+			# it appears on one side only;
+			# be convenient and store it as both cases
+			storeGlyph(key.upper(), svgFilename)
+			storeGlyph(key.lower(), svgFilename)
+
+	font.save('stenoboard.sfd')
+	font.generate('stenoboard.ttf')
+
 def main():
 
 	write_svg_for_named_keys('board.svg', KEYS.keys(), isFilled=False)
 
 	for key in sorted(KEYS.keys()):
 		write_svg_for_named_keys(key+'.svg', [key], isFilled=True)
+
+	makeFont()
 
 if __name__=='__main__':
 	main()
